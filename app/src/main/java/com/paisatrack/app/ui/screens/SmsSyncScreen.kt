@@ -215,14 +215,28 @@ fun SmsSyncScreen(
                         }
 
                         if (updateResult != null) {
-                            Text(
-                                text = if (updateResult!!.isUpdateAvailable)
-                                    "✨ New version v${updateResult!!.latestVersion} ready to install!"
-                                else
-                                    "✓ You are already on the latest version.",
-                                fontSize = 12.sp,
-                                color = if (updateResult!!.isUpdateAvailable) AccentEmerald else TextMuted
-                            )
+                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Text(
+                                    text = updateResult!!.statusMessage.ifEmpty {
+                                        if (updateResult!!.isUpdateAvailable)
+                                            "✨ New version v${updateResult!!.latestVersion} ready to install!"
+                                        else
+                                            "✓ You are already on the latest version."
+                                    },
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = if (updateResult!!.isUpdateAvailable) AccentEmerald else TextMuted
+                                )
+
+                                Text(
+                                    text = "🌐 Direct browser download: github.com/yashdesai117/Finances-Tracker-App/releases",
+                                    fontSize = 11.sp,
+                                    color = AccentCobalt,
+                                    modifier = Modifier.clickable {
+                                        AppUpdateManager.openInBrowser(context, "https://github.com/yashdesai117/Finances-Tracker-App/releases")
+                                    }
+                                )
+                            }
                         }
                     }
                 }
