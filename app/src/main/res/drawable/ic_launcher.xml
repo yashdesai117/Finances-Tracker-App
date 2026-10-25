@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#10B981"
+        android:pathData="M16,0 L92,0 A16,16 0 0,1 108,16 L108,92 A16,16 0 0,1 92,108 L16,108 A16,16 0 0,1 0,92 L0,16 A16,16 0 0,1 16,0 Z" />
+    <path
+        android:fillColor="#0F172A"
+        android:pathData="M54,20 C35.2,20 20,35.2 20,54 C20,72.8 35.2,88 54,88 C72.8,88 88,72.8 88,54 C88,35.2 72.8,20 54,20 Z" />
+    <!-- Stylized Rupee symbol bars -->
+    <path
+        android:fillColor="#10B981"
+        android:pathData="M38,36 L70,36 L70,42 L38,42 Z" />
+    <path
+        android:fillColor="#10B981"
+        android:pathData="M38,46 L64,46 L64,52 L38,52 Z" />
+    <path
+        android:fillColor="#10B981"
+        android:pathData="M50,52 C58,52 64,56 64,62 C64,68 58,72 50,72 L46,72 L66,86 L56,86 L38,72 L38,66 L50,66 C54,66 57,64 57,62 C57,60 54,58 50,58 L38,58 L38,52 Z" />
+</vector>
