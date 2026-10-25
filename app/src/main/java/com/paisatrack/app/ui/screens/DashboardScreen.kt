@@ -276,7 +276,12 @@ fun DashboardScreen(
                             }
                         }
 
-                        Divider(color = borderColor.copy(alpha = 0.4f), thickness = 0.5.dp)
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(0.5.dp)
+                                .background(borderColor.copy(alpha = 0.4f))
+                        )
 
                         // 30-Day Daily Spend Strip (Bento Hero Tile style)
                         BentoDailyStrip(transactions = recentTransactions)

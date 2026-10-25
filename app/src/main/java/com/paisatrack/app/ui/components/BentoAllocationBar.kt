@@ -19,8 +19,24 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.paisatrack.app.data.model.Category
 import com.paisatrack.app.data.model.CategorySpend
+import com.paisatrack.app.ui.theme.*
 import java.text.NumberFormat
 import java.util.Locale
+
+private fun parseCategoryColor(hex: String?): Color {
+    if (hex.isNullOrBlank()) return AccentCobalt
+    return try {
+        val clean = hex.removePrefix("#")
+        val parsed = clean.toLong(16)
+        if (clean.length == 6) {
+            Color(0xFF000000 or parsed)
+        } else {
+            Color(parsed)
+        }
+    } catch (_: Exception) {
+        AccentCobalt
+    }
+}
 
 @Composable
 fun BentoAllocationBar(
@@ -103,11 +119,7 @@ fun BentoAllocationBar(
                 ) {
                     categorySpends.forEach { spend ->
                         val cat = categories.find { it.id == spend.categoryId }
-                        val catColor = try {
-                            Color(android.graphics.Color.parseColor(cat?.colorHex ?: "#64748B"))
-                        } catch (e: Exception) {
-                            Color(0xFF6366F1)
-                        }
+                        val catColor = parseCategoryColor(cat?.colorHex)
                         val weight = (spend.totalAmount / totalExpense).toFloat().coerceAtLeast(0.02f)
 
                         Box(
@@ -134,11 +146,7 @@ fun BentoAllocationBar(
                 sortedCategories.forEach { cat ->
                     val spent = spendMap[cat.id] ?: 0.0
                     val percent = if (totalExpense > 0) ((spent / totalExpense) * 100).toInt() else 0
-                    val catColor = try {
-                        Color(android.graphics.Color.parseColor(cat.colorHex))
-                    } catch (e: Exception) {
-                        Color(0xFF6366F1)
-                    }
+                    val catColor = parseCategoryColor(cat.colorHex)
 
                     Row(
                         modifier = Modifier
