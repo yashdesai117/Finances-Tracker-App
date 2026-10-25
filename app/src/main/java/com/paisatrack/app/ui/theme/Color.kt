@@ -14,10 +14,24 @@ val TextPrimary = Color(0xFFFFFFFF)
 val TextSecondary = Color(0xFF94A3B8)
 val TextMuted = Color(0xFF64748B)
 
+// Light Theme Tokens (Apple / Linear Minimal Light)
+val CanvasLight = Color(0xFFF8FAFC)
+val SurfaceLight = Color(0xFFFFFFFF)
+val SurfaceCardLight = Color(0xFFFFFFFF)
+val SurfaceCardHighlightLight = Color(0xFFF1F5F9)
+val BorderLight = Color(0x1E0F172A)
+val BorderSubtleLight = Color(0x0F0F172A)
+
+val TextPrimaryLight = Color(0xFF0F172A)
+val TextSecondaryLight = Color(0xFF475569)
+val TextMutedLight = Color(0xFF64748B)
+
+// Shared Accents
 val AccentCobalt = Color(0xFF4F46E5)
 val AccentBlue = Color(0xFF2563EB)
 val AccentEmerald = Color(0xFF10B981)
 val AccentAmber = Color(0xFFF59E0B)
 val AccentRed = Color(0xFFF43F5E)
-val AccentSky = Color(0xFF38BDF8)
+val AccentSky = Color(0xFF0EA5E9)
 val AccentPurple = Color(0xFF8B5CF6)
+

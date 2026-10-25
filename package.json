@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "description": "Interactive Web Simulator and Companion for PaisaTrack Android App",
   "scripts": {
-    "start": "npx -y serve web-simulator -l 3000"
+    "start": "npx -y serve web-simulator -l 3000",
+    "web": "npm --prefix web run dev",
+    "web:build": "npm --prefix web run build"
   }
 }

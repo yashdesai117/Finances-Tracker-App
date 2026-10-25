@@ -44,7 +44,9 @@ class MainActivity : ComponentActivity() {
         val shouldQuickAdd = intent.getBooleanExtra("EXTRA_QUICK_ADD", false)
 
         setContent {
-            PaisaTrackTheme {
+            var isDarkTheme by remember { mutableStateOf(true) }
+
+            PaisaTrackTheme(darkTheme = isDarkTheme) {
                 val db = remember { AppDatabase.getInstance(applicationContext) }
                 val scope = rememberCoroutineScope()
 
@@ -108,7 +110,7 @@ class MainActivity : ComponentActivity() {
 
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = CanvasDark
+                    color = androidx.compose.material3.MaterialTheme.colorScheme.background
                 ) {
                     when (currentScreen) {
                         Screen.DASHBOARD -> DashboardScreen(
@@ -119,8 +121,16 @@ class MainActivity : ComponentActivity() {
                             categories = categories,
                             categorySpends = categorySpends,
                             isFloatingBubbleActive = isFloatingServiceRunning,
+                            isDarkTheme = isDarkTheme,
+                            onToggleTheme = { isDarkTheme = !isDarkTheme },
                             onToggleFloatingBubble = { toggleFloatingBubble() },
                             onAddTransactionClick = { showAddDialog = true },
+                            onUpdateTransactionCategory = { txn, newCatId ->
+                                scope.launch {
+                                    db.transactionDao().update(txn.copy(categoryId = newCatId))
+                                    WidgetUpdateHelper.updateAllWidgets(applicationContext)
+                                }
+                            },
                             onDeleteTransaction = { txn ->
                                 scope.launch {
                                     db.transactionDao().delete(txn)

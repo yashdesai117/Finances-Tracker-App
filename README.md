@@ -1,80 +1,97 @@
 # PaisaTrack: Automated SMS Financial Tracker & Home Screen Widget
 
-**PaisaTrack** is a native Android application designed to give you effortless, continuous awareness of your spending. It automatically categorizes all your expenses and income directly from your incoming bank and UPI SMS messages, and maintains an **always-visible Home Screen Widget** so you always know your monthly spend and avoid unnecessary expenses.
+**PaisaTrack** is an ultra-premium personal finance application designed for Android and the Web. It automatically categorizes all your expenses and income directly from your incoming bank and UPI SMS messages, and maintains an **always-visible Home Screen Widget & Floating Pill** so you always know your monthly spend and avoid unnecessary expenses.
 
 ---
 
-## 🌟 Key Features
+## 🌟 Ultra-Premium Bento UI Highlights
 
-1. **Always-Visible Android Home Screen Widget**:
-   - Displays your **Monthly Spend till date** (e.g., `₹ 24,580`) in large, crisp typography.
-   - Progress bar towards your monthly budget target.
-   - **Daily Burn Rate**: Shows your remaining safe spending allowance per day (e.g. `₹ 650/day left`).
-   - Visual status badge: 🟢 *On Track* (<75%), 🟡 *Caution* (75-95%), or 🔴 *Over Budget* (>95%).
-   - **Quick Add (`+`) button**: Log cash expenses directly from your home screen in 2 seconds.
-   - Updates instantaneously whenever a new bank SMS arrives.
+1. **Bento Hero Tile & 30-Day Activity Strip**:
+   - Giant typographic net spend with active budget progress.
+   - Interactive 30-day vertical daily spend strip: Tap or hover any day of the month to view its exact spend.
+   - Live daily safe allowance pill.
 
-2. **Automatic SMS Financial Parsing**:
-   - Supports Indian banks and UPI ecosystems: **HDFC, SBI, ICICI, Axis, Kotak, PNB, Canara, GPay, PhonePe, Paytm, Cred, Amazon Pay, and credit cards**.
-   - Extracts amount, debit vs credit, account/card number, and merchant name.
-   - Auto-categorizes into 10+ standard buckets:
-     - 🍔 **Food & Dining** (Swiggy, Zomato, cafes, restaurants)
-     - 🛒 **Groceries** (Blinkit, Zepto, BigBasket, DMart, Instamart)
-     - 🛍️ **Shopping** (Amazon, Flipkart, Myntra, retail)
-     - 🚗 **Transport & Fuel** (Uber, Ola, Rapido, Petrol pumps, Metro)
-     - 💡 **Bills & Utilities** (Electricity, Gas, Broadband, Mobile, Rent)
-     - 🎬 **Entertainment** (Netflix, Prime, BookMyShow, Spotify)
-     - 💊 **Health & Medical** (Pharmacies, Clinics, Apollo, 1mg)
-     - 📈 **Investments** (Zerodha, Groww, SIPs, Mutual Funds)
-     - 💼 **Salary & Income** (Salary credits, dividends, refunds)
-     - 📦 **Other / Cash**
+2. **Speedometer Budget Velocity Gauge**:
+   - Live S-curve semicircle speedometer arc with dynamic needle.
+   - Visualizes your burn rate and indicates whether you are *On Track*, in *Caution*, or *Pacing Too Fast*.
 
-3. **100% Offline & Private**:
-   - PaisaTrack requests **NO internet permission** in its Android manifest.
-   - None of your bank SMS, messages, or financial figures are ever uploaded anywhere. Everything stays securely on your phone.
+3. **3D Interactive Fanned Bank Card Stack**:
+   - Interactive card stack featuring your parsed accounts (e.g. **ICICI Coral Credit Card \*\*2006**, **Salary Debit \*\*5512**, and **Cash Wallet**).
+   - Golden EMV chip, holographic sheen, and elevation spring physics: click any card to bring it forward.
 
-4. **Past SMS Backfill (60-day Import)**:
-   - On first setup, tap "Scan Past SMS" in the app to analyze previous transactions and start with an accurate monthly total immediately.
+4. **100% Complete Category Allocation**:
+   - Segmented proportional bar visualizer.
+   - Complete breakdown displaying **every category** (Shopping, Groceries, Food & Dining, Transport, Bills & Utilities, Entertainment, Health, Investments, Education, Travel, Other) with active spending, percentage of monthly spend, and target budgets.
+   - **Tap-to-Recategorize**: Tap any transaction to change its category with 1 tap.
+
+5. **Dual Light & Dark Themes**:
+   - Switch between sleek Obsidian Dark and crisp Minimal Light mode with the top-bar sun/moon toggle.
 
 ---
 
-## 🚀 How to Try the Interactive Simulator Right Now
+## 💻 React + shadcn + Tailwind Web Companion
 
-We've included a zero-setup interactive web companion and simulator:
-1. Open the folder `web-simulator/` in Windows File Explorer.
-2. Double-click **`index.html`** to open it in Chrome or Edge.
-3. You can click any sample bank SMS (HDFC, SBI, Swiggy, Blinkit, Salary) or paste your own SMS to see how the parser works and watch the **Home Screen Widget** recalculate in real-time!
+The repository includes a modern React + TypeScript + Tailwind web companion located in `web/` with full **shadcn project structure**.
+
+### Directory Structure:
+```
+web/
+├── components.json         # shadcn CLI configuration
+├── index.html
+├── package.json
+├── tailwind.config.js      # shadcn theme color tokens
+├── tsconfig.json           # @/* path aliasing
+├── vite.config.ts
+└── src/
+    ├── index.css           # shadcn CSS variables & OKLCH color definitions
+    ├── lib/
+    │   └── utils.ts        # shadcn cn() class merger
+    └── components/
+        └── ui/             # Standard shadcn component library path
+            ├── web3-bento.tsx       # Web3 Bento Grid
+            ├── paisatrack-bento.tsx # PaisaTrack INR Edition Bento
+            ├── demo.tsx             # Demo container
+            └── theme-toggle.tsx     # Theme toggle component
+```
+
+### Why `/components/ui` is Important
+In shadcn/ui and modern React architecture, `/components/ui` serves as the centralized, un-opinionated primitive library directory. Placing atomic, reusable UI components here allows shadcn CLI commands (like `npx shadcn@latest add button`) to automatically resolve dependencies and maintain a consistent token system across your application.
+
+### Running the Web Dashboard Locally
+From the project root:
+```bash
+npm run web
+```
+Or inside `web/`:
+```bash
+npm run dev
+```
+
+### Setting up shadcn CLI in Any Project
+If you ever need to initialize shadcn from scratch:
+```bash
+# 1. Initialize Vite + React + TS
+npx create-vite@latest my-app --template react-ts
+
+# 2. Install Tailwind CSS
+npm install -D tailwindcss postcss autoprefixer
+npx tailwindcss init -p
+
+# 3. Initialize shadcn
+npx shadcn@latest init
+```
 
 ---
 
 ## 📱 How to Build the Android APK
 
-Since you are not from a tech background, we've provided multiple easy ways:
+### Option A: Free Cloud Build via GitHub Actions (Recommended)
+1. Push code to your GitHub repository:
+   ```bash
+   git push origin main
+   ```
+2. GitHub automatically triggers `.github/workflows/build-apk.yml`.
+3. Go to the **Actions** tab on GitHub, click the latest workflow run, and download `PaisaTrack-Debug-APK` directly to your phone.
 
-### Option A: Automated 1-Click Script (Recommended)
-1. Right-click `setup-and-build.ps1` and select **"Run with PowerShell"** (or open PowerShell in this folder and run `.\setup-and-build.ps1`).
-2. The script will automatically verify/install OpenJDK 17 via Windows `winget` and build the debug APK.
-3. Your installable APK will be ready in `output/PaisaTrack.apk`!
-
-### Option B: Free Cloud Build via GitHub Actions
-1. Upload/push this repository to your GitHub account.
-2. GitHub will automatically run the pre-configured `.github/workflows/build-apk.yml` workflow.
-3. Download the compiled `PaisaTrack-Debug-APK` directly from the GitHub Actions tab to your phone!
-
-### Option C: Open in Android Studio
-1. Open Android Studio -> Select **Open** -> Choose `Finances Tracker App`.
-2. Click the green **Run** button (or `Build` > `Build Bundle(s) / APK(s)` > `Build APK(s)`).
-
----
-
-## 📲 How to Install & Add the Widget to Your Phone
-
-1. **Transfer the APK**: Send `output/PaisaTrack.apk` to your phone via USB cable, WhatsApp, Telegram, or Google Drive.
-2. **Install**: Tap the `.apk` on your phone and tap **Install** (allow "Install unknown apps" from your file manager or browser if prompted).
-3. **Grant SMS Permission**: Open PaisaTrack, tap the 📩 icon in the top right, and tap **"Grant SMS Permission"**. (Optional: Tap "Scan Past 60 Days SMS" to import existing expenses).
-4. **Add the Widget to your Home Screen**:
-   - Go to your Android phone's Home Screen.
-   - Long-press any empty area on the screen.
-   - Tap **Widgets**.
-   - Find **PaisaTrack** and drag the **"Monthly Spend Tracker"** widget onto your home screen.
-   - That's it! Your monthly spend, progress bar, and daily safe allowance will always be right there in front of you.
+### Option B: Local Android Build
+Run `setup-and-build.ps1` or open the project in **Android Studio** and click **Build APK**.
