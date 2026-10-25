@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PaisaTrack — Smart SMS Expense Tracker & Android Home Screen Widget</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Header Banner -->
+  <header class="header-banner">
+    <div class="brand-badge">
+      <div class="brand-icon">₹</div>
+      <div>
+        <div class="brand-title">PaisaTrack Companion & Live Simulator</div>
+        <div class="brand-sub">Native Android App with Automatic SMS Categorization & Always-Visible Home Screen Widget</div>
+      </div>
+    </div>
+    <div class="privacy-pill">
+      <span>🔒 100% Offline & Private (No Internet Permission Required)</span>
+    </div>
+  </header>
+
+  <!-- Main Content Area -->
+  <main class="main-container">
+
+    <!-- Left Column: Controls & SMS Testing Bench -->
+    <section class="panel">
+      <div class="panel-title">
+        <span>📩</span>
+        <span>SMS Transaction Testing Console</span>
+      </div>
+      <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.6;">
+        Click any of the pre-configured bank SMS samples below or paste your own SMS to see how the engine extracts transaction details, assigns categories, and <strong>immediately updates the Home Screen Widget</strong> on the phone:
+      </p>
+
+      <!-- Sample SMS Quick Chips -->
+      <div class="quick-samples">
+        <button class="chip-btn" data-sender="VM-HDFCBK" data-sms="Dear Customer, INR 450.00 debited from A/C **1234 on 25-Oct-26 towards SWIGGY. UPI Ref 328492019482. Avl Bal: INR 45,210.00.">🍔 ₹450 Swiggy (Food)</button>
+        <button class="chip-btn" data-sender="AD-SBIINB" data-sms="Your A/C ending with 5678 is debited by Rs. 1,890.00 on 25-Oct-26 at BLINKIT GROCERY. Avl Bal Rs 22,400.00.">🛒 ₹1,890 Blinkit (Groceries)</button>
+        <button class="chip-btn" data-sender="VK-ICICIB" data-sms="Alert: You have spent INR 3,499.00 on your ICICI Bank Credit Card ending 9012 at AMAZON INDIA on 24-Oct-26.">🛍️ ₹3,499 Amazon (Shopping)</button>
+        <button class="chip-btn" data-sender="AX-AXISBK" data-sms="Txn of Rs 520.00 done at SHELL PETROL PUMP on 24-Oct-26 using Debit Card. Avl Bal: Rs 14,300.00.">🚗 ₹520 Petrol (Fuel)</button>
+        <button class="chip-btn" data-sender="BP-KOTAKB" data-sms="Dear Customer, INR 1,650.00 debited from A/C **4321 on 23-Oct towards BESCOM ELECTRICITY BILL.">💡 ₹1,650 BESCOM (Bills)</button>
+        <button class="chip-btn" data-sender="VM-HDFCBK" data-sms="Your A/C **1234 has been credited with INR 75,000.00 on 01-Oct-26 by SALARY / TECH CORP. Avl Bal: INR 95,000.00.">💼 ₹75,000 Salary (Income)</button>
+        <button class="chip-btn" data-sender="VM-HDFCBK" data-sms="124859 is your secret OTP for transaction of INR 500.00 at PayTM. Do NOT share this OTP with anyone.">🛡️ Test OTP (Ignored)</button>
+      </div>
+
+      <!-- SMS Input Textarea -->
+      <div class="sms-input-group">
+        <label for="sms-input" style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">Incoming SMS Message Body</label>
+        <textarea id="sms-input" class="sms-textarea" placeholder="Paste incoming bank/UPI SMS here..."></textarea>
+      </div>
+
+      <div style="display: flex; gap: 12px; align-items: center;">
+        <input type="text" id="sender-input" class="sms-textarea" style="height: 42px; width: 160px;" value="VM-HDFCBK" placeholder="Sender ID">
+        <button id="btn-parse-sms" class="btn btn-primary" style="flex: 1;">⚡ Simulate Receiving SMS</button>
+      </div>
+
+      <!-- Real-Time Inspection Result -->
+      <div id="parse-result-box" class="result-inspector" style="display: none;"></div>
+
+      <hr style="border: none; border-top: 1px solid var(--border); margin: 6px 0;">
+
+      <!-- Budget Target Settings -->
+      <div class="panel-title" style="font-size: 16px;">
+        <span>🎯</span>
+        <span>Monthly Budget Goal</span>
+      </div>
+      <p style="font-size: 13px; color: var(--text-secondary);">
+        Adjust your monthly spending limit to test how the Home Screen Widget progress bar and daily burn rate react:
+      </p>
+      <div style="display: flex; gap: 10px; align-items: center;">
+        <input type="number" id="setting-budget-input" class="sms-textarea" style="height: 42px; width: 180px;" value="35000">
+        <button id="btn-update-budget" class="btn btn-secondary">Update Target</button>
+      </div>
+    </section>
+
+    <!-- Right Column: Interactive Android Phone Frame with Home Screen Widget -->
+    <div class="phone-mockup-wrapper">
+      <div class="phone-frame">
+        <div class="phone-screen">
+
+          <!-- Phone Status Bar -->
+          <div class="phone-status-bar">
+            <span>9:41</span>
+            <span style="display: flex; gap: 6px;">
+              <span>5G</span>
+              <span>100%</span>
+            </span>
+          </div>
+
+          <!-- THE ANDROID HOME SCREEN WIDGET -->
+          <div class="android-widget" id="home-widget">
+            <div class="widget-header">
+              <span class="widget-title">MONTHLY EXPENSE</span>
+              <span class="widget-status-badge" id="widget-status">● On Track (65%)</span>
+            </div>
+
+            <div class="widget-main-row">
+              <span class="widget-amount" id="widget-amount">₹24,580</span>
+              <button class="widget-btn-add" id="widget-btn-add" title="Quick Add Cash Expense">+</button>
+            </div>
+
+            <div class="widget-progress-track">
+              <div class="widget-progress-fill" id="widget-progress" style="width: 65%;"></div>
+            </div>
+
+            <div class="widget-footer">
+              <span class="widget-budget-info" id="widget-budget-info">Budget: ₹35,000</span>
+              <span class="widget-burn-rate" id="widget-burn-rate">₹650/day left</span>
+            </div>
+          </div>
+
+          <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); font-weight: 700; margin-top: 4px;">
+            Inside PaisaTrack App
+          </div>
+
+          <!-- Quick Stats Row -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <div style="background: var(--surface-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 10px;">
+              <div style="font-size: 10px; color: var(--text-muted); font-weight: 700;">INCOME</div>
+              <div style="font-size: 16px; font-weight: 800; color: var(--emerald);" id="dash-total-income">₹75,000</div>
+            </div>
+            <div style="background: var(--surface-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 10px;">
+              <div style="font-size: 10px; color: var(--text-muted); font-weight: 700;">NET SAVINGS</div>
+              <div style="font-size: 16px; font-weight: 800; color: var(--blue);" id="dash-net-savings">₹50,420</div>
+            </div>
+          </div>
+
+          <!-- Category Spending Breakdown -->
+          <div>
+            <div style="font-size: 13px; font-weight: 700; margin-bottom: 6px;">Spending by Category</div>
+            <div id="category-spend-list" style="display: flex; flex-direction: column; gap: 4px;"></div>
+          </div>
+
+          <!-- Recent Transactions -->
+          <div>
+            <div style="font-size: 13px; font-weight: 700; margin-bottom: 6px;">Recent Transactions</div>
+            <div id="recent-txns-list" style="display: flex; flex-direction: column; gap: 6px;"></div>
+          </div>
+
+        </div>
+      </div>
+      <div style="font-size: 12px; color: var(--text-muted); text-align: center;">
+        Interactive Android Preview: Tap the <strong>+</strong> button on the widget to log cash!
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Modal for Adding Cash Transaction -->
+  <div class="modal-overlay" id="cash-modal">
+    <div class="modal-card">
+      <div style="font-size: 18px; font-weight: 800;">Log Cash / Offline Expense</div>
+      <p style="font-size: 13px; color: var(--text-secondary);">Add an expense that wasn't paid via card or bank SMS.</p>
+      
+      <div style="display: flex; flex-direction: column; gap: 6px;">
+        <label style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">Amount (₹)</label>
+        <input type="number" id="cash-amount" class="sms-textarea" style="height: 42px;" placeholder="e.g. 150">
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 6px;">
+        <label style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">Spent on / Merchant</label>
+        <input type="text" id="cash-merchant" class="sms-textarea" style="height: 42px;" placeholder="e.g. Street Food, Cab, Snacks">
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 6px;">
+        <label style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">Category</label>
+        <select id="cash-category" class="sms-textarea" style="height: 42px;">
+          <option value="food">🍔 Food & Dining</option>
+          <option value="groceries">🛒 Groceries</option>
+          <option value="transport">🚗 Transport & Fuel</option>
+          <option value="shopping">🛍️ Shopping</option>
+          <option value="bills">💡 Bills & Utilities</option>
+          <option value="entertainment">🎬 Entertainment</option>
+          <option value="health">💊 Health & Medical</option>
+          <option value="other">📦 Other</option>
+        </select>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+        <button class="btn btn-secondary" id="modal-cancel-btn">Cancel</button>
+        <button class="btn btn-primary" id="modal-save-btn">Add to Expense</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

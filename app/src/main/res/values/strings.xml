@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">PaisaTrack</string>
+    <string name="widget_name">Monthly Spend Tracker</string>
+    <string name="widget_title">THIS MONTH SPENT</string>
+    <string name="widget_default_amount">₹0</string>
+    <string name="widget_default_budget">Budget: ₹35,000</string>
+    <string name="widget_default_status">On Track</string>
+    <string name="widget_add_cash">+</string>
+    <string name="currency_symbol">₹</string>
+</resources>
