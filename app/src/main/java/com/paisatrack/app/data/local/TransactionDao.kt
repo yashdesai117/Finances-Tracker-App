@@ -43,4 +43,7 @@ interface TransactionDao {
 
     @Query("SELECT COUNT(*) FROM transactions WHERE rawSms = :rawSms")
     suspend fun countByRawSms(rawSms: String): Int
+
+    @Query("DELETE FROM transactions")
+    suspend fun deleteAll()
 }

@@ -1,6 +1,10 @@
 package com.paisatrack.app
 
+import android.content.Intent
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,8 +14,8 @@ import androidx.compose.ui.Modifier
 import com.paisatrack.app.data.local.AppDatabase
 import com.paisatrack.app.data.model.Budget
 import com.paisatrack.app.data.model.Category
-import com.paisatrack.app.data.model.CategorySpend
 import com.paisatrack.app.data.model.Transaction
+import com.paisatrack.app.service.FloatingBubbleService
 import com.paisatrack.app.ui.components.AddTransactionDialog
 import com.paisatrack.app.ui.screens.BudgetsScreen
 import com.paisatrack.app.ui.screens.DashboardScreen
@@ -32,6 +36,8 @@ enum class Screen {
 
 class MainActivity : ComponentActivity() {
 
+    private var isFloatingServiceRunning by mutableStateOf(false)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -45,7 +51,7 @@ class MainActivity : ComponentActivity() {
                 var currentScreen by remember { mutableStateOf(Screen.DASHBOARD) }
                 var showAddDialog by remember { mutableStateOf(shouldQuickAdd) }
 
-                // Calculate current month time range
+                // Current month time range
                 val calendar = Calendar.getInstance()
                 val currentYear = calendar.get(Calendar.YEAR)
                 val currentMonth = calendar.get(Calendar.MONTH)
@@ -82,6 +88,24 @@ class MainActivity : ComponentActivity() {
 
                 val monthlyBudget = budgetObj?.overallBudget ?: 35000.0
 
+                fun toggleFloatingBubble() {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this@MainActivity)) {
+                        val intent = Intent(
+                            Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                            Uri.parse("package:$packageName")
+                        )
+                        startActivity(intent)
+                    } else {
+                        if (isFloatingServiceRunning) {
+                            stopService(Intent(this@MainActivity, FloatingBubbleService::class.java))
+                            isFloatingServiceRunning = false
+                        } else {
+                            startService(Intent(this@MainActivity, FloatingBubbleService::class.java))
+                            isFloatingServiceRunning = true
+                        }
+                    }
+                }
+
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = CanvasDark
@@ -94,9 +118,18 @@ class MainActivity : ComponentActivity() {
                             recentTransactions = transactions,
                             categories = categories,
                             categorySpends = categorySpends,
+                            isFloatingBubbleActive = isFloatingServiceRunning,
+                            onToggleFloatingBubble = { toggleFloatingBubble() },
                             onAddTransactionClick = { showAddDialog = true },
+                            onDeleteTransaction = { txn ->
+                                scope.launch {
+                                    db.transactionDao().delete(txn)
+                                    WidgetUpdateHelper.updateAllWidgets(applicationContext)
+                                }
+                            },
                             onNavigateToTransactions = { currentScreen = Screen.TRANSACTIONS },
-                            onNavigateToSmsSync = { currentScreen = Screen.SMS_SYNC }
+                            onNavigateToSmsSync = { currentScreen = Screen.SMS_SYNC },
+                            onNavigateToBudgets = { currentScreen = Screen.BUDGETS }
                         )
                         Screen.TRANSACTIONS -> TransactionsScreen(
                             transactions = allTransactions,
@@ -121,6 +154,8 @@ class MainActivity : ComponentActivity() {
                             onBackClick = { currentScreen = Screen.DASHBOARD }
                         )
                         Screen.SMS_SYNC -> SmsSyncScreen(
+                            isFloatingBubbleActive = isFloatingServiceRunning,
+                            onToggleFloatingBubble = { toggleFloatingBubble() },
                             onBackClick = { currentScreen = Screen.DASHBOARD },
                             onHistoricalSyncComplete = {
                                 WidgetUpdateHelper.updateAllWidgets(applicationContext)

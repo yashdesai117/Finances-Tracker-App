@@ -15,11 +15,8 @@ object SmsParserEngine {
 
     // Patterns for merchant extraction
     private val MERCHANT_PATTERNS = listOf(
-        // "towards SWIGGY on 24-Oct"
         Pattern.compile("(?:towards|at|paid to|to VPA|to)\\s+([A-Za-z0-9\\s._@\\-&]{2,35}?)(?=\\s+(?:on|ref|upi|avl|bal|clear|using|limit|via|through|ending|a/c|from|dated|\\.|,|$))", Pattern.CASE_INSENSITIVE),
-        // "info: SWIGGY"
         Pattern.compile("(?:info|vpa):?\\s*([A-Za-z0-9._@\\-]{2,35})", Pattern.CASE_INSENSITIVE),
-        // "VPA swiggy@icici"
         Pattern.compile("VPA\\s+([A-Za-z0-9._@\\-]{2,35})", Pattern.CASE_INSENSITIVE)
     )
 
@@ -30,19 +27,37 @@ object SmsParserEngine {
         Pattern.compile("([xX*]{2,}\\d{3,4})", Pattern.CASE_INSENSITIVE)
     )
 
-    // Debit indicator keywords
+    // Debit indicator keywords (Completed expenses)
     private val DEBIT_KEYWORDS = listOf(
         "debited", "spent", "paid to", "transferred to", "withdrawn", "purchase of",
         "charged", "sent to", "txn of", "payment of", "debited by"
     )
 
-    // Credit indicator keywords
+    // Credit indicator keywords (Completed real deposits/income)
     private val CREDIT_KEYWORDS = listOf(
-        "credited", "received", "deposited", "salary credited", "refund of", "cashback of", "added to"
+        "credited", "deposited", "salary credited", "refund of", "cashback of", "added to your bank",
+        "has been credited to your", "received in your a/c"
     )
 
-    // Non-transaction filter (OTPs, promo alerts, failed attempts)
-    private val IGNORE_KEYWORDS = listOf(
+    // Mandatory bank/financial indicators for credit messages (to reject fake promo credits)
+    private val BANK_CREDIT_INDICATORS = listOf(
+        "a/c", "acct", "account", "ending", "card", "upi ref", "imps", "neft", "rtgs",
+        "avl bal", "available bal", "clear bal", "balance", "bank", "salary", "payroll"
+    )
+
+    // Aggressive filters for promotional alerts, discount coupons, fake credits, loans, and OTPs
+    private val PROMO_AND_SPAM_KEYWORDS = listOf(
+        // Coupon / Discount words
+        "off", "up to", "coupon", "voucher", "discount", "use code", "code:", "apply code",
+        "code eazydiner", "promo code", "promotional", "cashback offer", "reward points",
+        "loyalty points", "bonus points", "bonus cash", "game cash", "claim now", "claim your",
+        "hurry", "valid till", "expires on", "tap here", "click here", "bit.ly", "t.co",
+        "w.ezyd.in", "free delivery", "order now", "flat rs", "save rs", "save up to",
+        "win up to", "earn up to", "gift card", "spin and win",
+        // Loan / Marketing
+        "pre-approved", "apply for loan", "loan of rs", "instant loan", "zero interest",
+        "credit limit increased", "upgrade your card", "insurance",
+        // OTPs & Non-completed authorizations
         "otp", "one time password", "verification code", "secret code", "do not share",
         "request to pay", "declined", "failed", "unsuccessful", "mandate created"
     )
@@ -54,35 +69,47 @@ object SmsParserEngine {
     fun parse(sender: String, body: String, timestamp: Long = System.currentTimeMillis()): ParsedTransaction? {
         val lowerBody = body.lowercase(Locale.ROOT)
 
-        // 1. Check if this is an OTP or non-completed authorization
-        for (ignore in IGNORE_KEYWORDS) {
-            if (lowerBody.contains(ignore)) {
+        // 1. Check if this is promotional, coupon discount, spam, or OTP
+        for (spam in PROMO_AND_SPAM_KEYWORDS) {
+            if (lowerBody.contains(spam)) {
                 return null
             }
         }
 
-        // 2. Determine Transaction Type (Debit/Expense vs Credit/Income)
+        // 2. Check for debit vs credit
         val isDebit = DEBIT_KEYWORDS.any { lowerBody.contains(it) }
-        val isCredit = CREDIT_KEYWORDS.any { lowerBody.contains(it) }
+        val isCreditCandidate = CREDIT_KEYWORDS.any { lowerBody.contains(it) }
 
-        if (!isDebit && !isCredit) {
-            // Not a financial transaction
+        if (!isDebit && !isCreditCandidate) {
             return null
         }
 
-        val type = if (isDebit) TransactionType.EXPENSE else TransactionType.INCOME
+        // 3. Strict verification for credit/income messages:
+        // Must contain an actual bank account, card, reference number, or balance update.
+        // This guarantees that app coupon credits like "Your EazyDiner account credited with up to Rs 300" are rejected.
+        val type: TransactionType
+        if (isDebit) {
+            type = TransactionType.EXPENSE
+        } else {
+            val hasBankContext = BANK_CREDIT_INDICATORS.any { lowerBody.contains(it) }
+            if (!hasBankContext) {
+                // No bank account or transaction reference found; reject as marketing credit
+                return null
+            }
+            type = TransactionType.INCOME
+        }
 
-        // 3. Extract Amount
+        // 4. Extract Amount
         val amount = extractAmount(body) ?: return null
         if (amount <= 0.0) return null
 
-        // 4. Extract Merchant / Party
+        // 5. Extract Merchant / Party
         val merchant = extractMerchant(body, sender)
 
-        // 5. Extract Account / Card info
+        // 6. Extract Account / Card info
         val accountName = extractAccount(body, sender)
 
-        // 6. Auto-classify Category
+        // 7. Auto-classify Category
         val categoryId = CategoryClassifier.classify(merchant, body, isIncome = (type == TransactionType.INCOME))
 
         return ParsedTransaction(
@@ -120,7 +147,6 @@ object SmsParserEngine {
             }
         }
 
-        // Clean sender as fallback (e.g. "HDFCBK" -> "HDFC Bank")
         return formatSenderAsMerchant(sender)
     }
 
@@ -129,7 +155,7 @@ object SmsParserEngine {
             .replace(Regex("[.,;:_]+$"), "")
             .trim()
             .split(" ")
-            .take(4) // Keep at most 4 words
+            .take(4)
             .joinToString(" ")
             .capitalizeWords()
     }

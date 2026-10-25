@@ -10,22 +10,44 @@ import kotlinx.coroutines.withContext
 
 object SmsHistoricalScanner {
 
+    /**
+     * Scans user SMS inbox.
+     * @param daysBack if > 0, scans that many days. If <= 0, scans the ENTIRE inbox history (all-time).
+     * @param clearExisting if true, wipes old transactions before scanning to remove previous misclassifications.
+     */
     suspend fun scanHistoricalSms(
         context: Context,
-        daysBack: Int = 60,
-        onProgress: ((current: Int, total: Int) -> Unit)? = null
+        daysBack: Int = 0,
+        clearExisting: Boolean = false,
+        onProgress: ((current: Int, total: Int, added: Int) -> Unit)? = null
     ): Int = withContext(Dispatchers.IO) {
         val db = AppDatabase.getInstance(context)
-        val cutoff = System.currentTimeMillis() - (daysBack.toLong() * 24 * 60 * 60 * 1000)
+
+        if (clearExisting) {
+            db.transactionDao().deleteAll()
+        }
 
         val uri = Uri.parse("content://sms/inbox")
         val projection = arrayOf("_id", "address", "body", "date")
-        val selection = "date >= ?"
-        val selectionArgs = arrayOf(cutoff.toString())
+
+        val selection: String?
+        val selectionArgs: Array<String>?
+        if (daysBack > 0) {
+            val cutoff = System.currentTimeMillis() - (daysBack.toLong() * 24 * 60 * 60 * 1000)
+            selection = "date >= ?"
+            selectionArgs = arrayOf(cutoff.toString())
+        } else {
+            // Scan ALL messages in inbox
+            selection = null
+            selectionArgs = null
+        }
         val sortOrder = "date DESC"
 
-        val cursor = context.contentResolver.query(uri, projection, selection, selectionArgs, sortOrder)
-            ?: return@withContext 0
+        val cursor = try {
+            context.contentResolver.query(uri, projection, selection, selectionArgs, sortOrder)
+        } catch (e: Exception) {
+            null
+        } ?: return@withContext 0
 
         var addedCount = 0
         val total = cursor.count
@@ -57,13 +79,13 @@ object SmsHistoricalScanner {
                     }
                 }
 
-                if (index % 10 == 0 || index == total) {
-                    onProgress?.invoke(index, total)
+                if (index % 15 == 0 || index == total) {
+                    onProgress?.invoke(index, total, addedCount)
                 }
             }
         }
 
-        if (addedCount > 0) {
+        if (addedCount > 0 || clearExisting) {
             WidgetUpdateHelper.updateAllWidgets(context)
         }
 

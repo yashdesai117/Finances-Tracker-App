@@ -9,13 +9,25 @@ object WidgetUpdateHelper {
 
     fun updateAllWidgets(context: Context) {
         val appWidgetManager = AppWidgetManager.getInstance(context)
-        val componentName = ComponentName(context, ExpenseWidgetProvider::class.java)
-        val appWidgetIds = appWidgetManager.getAppWidgetIds(componentName)
 
-        if (appWidgetIds != null && appWidgetIds.isNotEmpty()) {
+        // 1. Update Full Card Widgets
+        val fullComponentName = ComponentName(context, ExpenseWidgetProvider::class.java)
+        val fullIds = appWidgetManager.getAppWidgetIds(fullComponentName)
+        if (fullIds != null && fullIds.isNotEmpty()) {
             val intent = Intent(context, ExpenseWidgetProvider::class.java).apply {
                 action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
-                putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetIds)
+                putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, fullIds)
+            }
+            context.sendBroadcast(intent)
+        }
+
+        // 2. Update Compact Slim Widgets
+        val compactComponentName = ComponentName(context, ExpenseWidgetCompactProvider::class.java)
+        val compactIds = appWidgetManager.getAppWidgetIds(compactComponentName)
+        if (compactIds != null && compactIds.isNotEmpty()) {
+            val intent = Intent(context, ExpenseWidgetCompactProvider::class.java).apply {
+                action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
+                putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, compactIds)
             }
             context.sendBroadcast(intent)
         }

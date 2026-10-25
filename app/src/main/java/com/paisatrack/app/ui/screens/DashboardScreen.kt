@@ -1,6 +1,5 @@
 package com.paisatrack.app.ui.screens
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -11,7 +10,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -26,7 +25,6 @@ import com.paisatrack.app.data.model.CategorySpend
 import com.paisatrack.app.data.model.Transaction
 import com.paisatrack.app.data.model.TransactionType
 import com.paisatrack.app.ui.components.CategorySpendBar
-import com.paisatrack.app.ui.components.StatCard
 import com.paisatrack.app.ui.theme.*
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
@@ -40,9 +38,13 @@ fun DashboardScreen(
     recentTransactions: List<Transaction>,
     categories: List<Category>,
     categorySpends: List<CategorySpend>,
+    isFloatingBubbleActive: Boolean,
+    onToggleFloatingBubble: () -> Unit,
     onAddTransactionClick: () -> Unit,
+    onDeleteTransaction: (Transaction) -> Unit,
     onNavigateToTransactions: () -> Unit,
     onNavigateToSmsSync: () -> Unit,
+    onNavigateToBudgets: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val currencyFormat = remember {
@@ -66,11 +68,12 @@ fun DashboardScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = onAddTransactionClick,
-                containerColor = AccentBlue,
+                containerColor = AccentCobalt,
                 contentColor = TextPrimary,
-                shape = CircleShape
+                shape = CircleShape,
+                modifier = Modifier.padding(bottom = 8.dp)
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Add Expense")
+                Icon(Icons.Default.Add, contentDescription = "Add Expense", modifier = Modifier.size(28.dp))
             }
         }
     ) { padding ->
@@ -78,11 +81,12 @@ fun DashboardScreen(
             modifier = modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(horizontal = 18.dp),
+            verticalArrangement = Arrangement.spacedBy(18.dp)
         ) {
+            // Header: App Title, Month & Navigation icons
             item {
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(10.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -90,131 +94,195 @@ fun DashboardScreen(
                 ) {
                     Column {
                         Text(
-                            text = "PaisaTrack",
-                            fontSize = 24.sp,
+                            text = "PAISATRACK",
+                            fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
-                            color = TextPrimary
+                            color = AccentCobalt,
+                            letterSpacing = 2.sp
                         )
                         Text(
                             text = SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(Date()),
-                            fontSize = 14.sp,
-                            color = TextMuted
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = TextPrimary
                         )
                     }
 
-                    IconButton(
-                        onClick = onNavigateToSmsSync,
-                        modifier = Modifier
-                            .clip(CircleShape)
-                            .background(SurfaceDark)
-                    ) {
-                        Text("📩", fontSize = 18.sp)
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        // Budget Settings Icon
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .background(SurfaceDark)
+                                .border(1.dp, BorderDark, CircleShape)
+                                .clickable { onNavigateToBudgets() },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("🎯", fontSize = 16.sp)
+                        }
+
+                        // SMS Sync & Full Scan Icon
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .background(SurfaceDark)
+                                .border(1.dp, BorderDark, CircleShape)
+                                .clickable { onNavigateToSmsSync() },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("📩", fontSize = 16.sp)
+                        }
                     }
                 }
             }
 
-            // Hero Spending Card (Mirrors the Home Screen Widget)
+            // Hero Card: Revolut-Style Spending Balance & Gauge
             item {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(24.dp))
+                        .clip(RoundedCornerShape(28.dp))
                         .background(SurfaceCard)
-                        .border(1.5.dp, BorderDark, RoundedCornerShape(24.dp))
-                        .padding(20.dp)
+                        .border(1.dp, BorderDark, RoundedCornerShape(28.dp))
+                        .padding(22.dp)
                 ) {
-                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "THIS MONTH'S SPEND",
-                                fontSize = 12.sp,
+                                text = "TOTAL SPENT THIS MONTH",
+                                fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = TextMuted,
-                                letterSpacing = 1.sp
+                                letterSpacing = 1.2.sp
                             )
-                            val statusText = when {
-                                percentUsed > 95 -> "● Over Budget"
-                                percentUsed > 75 -> "● Caution ($percentUsed%)"
-                                else -> "● On Track ($percentUsed%)"
-                            }
+
                             val statusColor = when {
                                 percentUsed > 95 -> AccentRed
                                 percentUsed > 75 -> AccentAmber
                                 else -> AccentEmerald
                             }
-                            Text(
-                                text = statusText,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = statusColor
-                            )
+                            val statusText = when {
+                                percentUsed > 95 -> "Over Budget ($percentUsed%)"
+                                percentUsed > 75 -> "Caution ($percentUsed%)"
+                                else -> "On Track ($percentUsed%)"
+                            }
+
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(20.dp))
+                                    .background(statusColor.copy(alpha = 0.12f))
+                                    .border(1.dp, statusColor.copy(alpha = 0.4f), RoundedCornerShape(20.dp))
+                                    .padding(horizontal = 10.dp, vertical = 4.dp)
+                            ) {
+                                Text(
+                                    text = "● $statusText",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = statusColor
+                                )
+                            }
                         }
 
+                        // Giant typographic spend value
                         Text(
                             text = currencyFormat.format(totalExpense),
-                            fontSize = 34.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = TextPrimary
+                            fontSize = 38.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = TextPrimary,
+                            letterSpacing = (-0.5).sp
                         )
 
+                        // Visual Progress Bar
                         LinearProgressIndicator(
                             progress = { (percentUsed / 100f).coerceIn(0f, 1f) },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(8.dp)
-                                .clip(RoundedCornerShape(4.dp)),
+                                .height(6.dp)
+                                .clip(RoundedCornerShape(3.dp)),
                             color = if (percentUsed > 95) AccentRed else if (percentUsed > 75) AccentAmber else AccentEmerald,
-                            trackColor = BorderDark
+                            trackColor = SurfaceDark
                         )
 
+                        // Budget Limit & Daily Safe Allowance
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(
-                                text = "Budget: ${currencyFormat.format(monthlyBudget)}",
-                                fontSize = 12.sp,
-                                color = TextSecondary
-                            )
-                            Text(
-                                text = "${currencyFormat.format(dailyBurnRate)}/day safe left",
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = AccentSky
-                            )
+                            Column {
+                                Text("Remaining of ${currencyFormat.format(monthlyBudget)}", fontSize = 12.sp, color = TextMuted)
+                                Text(currencyFormat.format(remainingBudget), fontSize = 15.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
+                            }
+
+                            Column(horizontalAlignment = Alignment.End) {
+                                Text("Safe daily allowance", fontSize = 12.sp, color = TextMuted)
+                                Text("${currencyFormat.format(dailyBurnRate)}/day", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = AccentSky)
+                            }
                         }
                     }
                 }
             }
 
-            // Quick Stats Row
+            // Quick Action Toolbar: Floating Overlay Pill & Manual Add
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    StatCard(
-                        title = "Income",
-                        value = currencyFormat.format(totalIncome),
-                        subtitle = "This Month",
-                        valueColor = AccentEmerald,
-                        modifier = Modifier.weight(1f)
-                    )
-                    StatCard(
-                        title = "Net Savings",
-                        value = currencyFormat.format((totalIncome - totalExpense).coerceAtLeast(0.0)),
-                        subtitle = "${if (totalIncome > 0) ((totalIncome - totalExpense) / totalIncome * 100).toInt() else 0}% saved",
-                        valueColor = AccentBlue,
-                        modifier = Modifier.weight(1f)
-                    )
+                    // Floating Overlay Button
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(if (isFloatingBubbleActive) AccentEmerald.copy(alpha = 0.15f) else SurfaceDark)
+                            .border(1.dp, if (isFloatingBubbleActive) AccentEmerald else BorderDark, RoundedCornerShape(16.dp))
+                            .clickable { onToggleFloatingBubble() }
+                            .padding(vertical = 12.dp, horizontal = 14.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text(if (isFloatingBubbleActive) "🟢" else "⚡", fontSize = 14.sp)
+                            Column {
+                                Text(
+                                    text = if (isFloatingBubbleActive) "Floating Pill: ON" else "Floating Pill: OFF",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isFloatingBubbleActive) AccentEmerald else TextPrimary
+                                )
+                                Text("Show over all apps", fontSize = 10.sp, color = TextMuted)
+                            }
+                        }
+                    }
+
+                    // Log Cash Quick Button
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(SurfaceDark)
+                            .border(1.dp, BorderDark, RoundedCornerShape(16.dp))
+                            .clickable { onAddTransactionClick() }
+                            .padding(vertical = 12.dp, horizontal = 14.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text("💵", fontSize = 16.sp)
+                            Column {
+                                Text("Log Cash Expense", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
+                                Text("Manual entry", fontSize = 10.sp, color = TextMuted)
+                            }
+                        }
+                    }
                 }
             }
 
-            // Category Spend Breakdown
+            // Spending by Category Breakdown
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -222,8 +290,8 @@ fun DashboardScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Spending by Category",
-                        fontSize = 18.sp,
+                        text = "Spending Breakdown",
+                        fontSize = 17.sp,
                         fontWeight = FontWeight.Bold,
                         color = TextPrimary
                     )
@@ -232,12 +300,20 @@ fun DashboardScreen(
 
             if (categorySpends.isEmpty()) {
                 item {
-                    Text(
-                        text = "No expenses recorded this month yet. Incoming bank SMS will automatically appear here!",
-                        fontSize = 13.sp,
-                        color = TextMuted,
-                        modifier = Modifier.padding(vertical = 8.dp)
-                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(SurfaceDark)
+                            .border(1.dp, BorderDark, RoundedCornerShape(16.dp))
+                            .padding(18.dp)
+                    ) {
+                        Text(
+                            text = "No expenses recorded this month yet. Your bank SMS will automatically appear here!",
+                            fontSize = 13.sp,
+                            color = TextMuted
+                        )
+                    }
                 }
             } else {
                 items(categorySpends) { spend ->
@@ -252,7 +328,7 @@ fun DashboardScreen(
                 }
             }
 
-            // Recent Transactions
+            // Recent Transactions Stream
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -261,15 +337,15 @@ fun DashboardScreen(
                 ) {
                     Text(
                         text = "Recent Transactions",
-                        fontSize = 18.sp,
+                        fontSize = 17.sp,
                         fontWeight = FontWeight.Bold,
                         color = TextPrimary
                     )
                     Text(
-                        text = "View All",
+                        text = "View All →",
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Bold,
-                        color = AccentBlue,
+                        color = AccentCobalt,
                         modifier = Modifier.clickable { onNavigateToTransactions() }
                     )
                 }
@@ -277,73 +353,84 @@ fun DashboardScreen(
 
             if (recentTransactions.isEmpty()) {
                 item {
-                    Text(
-                        text = "No recent transactions found.",
-                        fontSize = 13.sp,
-                        color = TextMuted,
-                        modifier = Modifier.padding(vertical = 8.dp)
-                    )
+                    Text("No transactions found.", fontSize = 13.sp, color = TextMuted)
                 }
             } else {
-                items(recentTransactions.take(8)) { txn ->
+                items(recentTransactions.take(8), key = { it.id }) { txn ->
                     val cat = categoryMap[txn.categoryId]
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(SurfaceDark)
-                            .padding(14.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                    val isExpense = txn.type == TransactionType.EXPENSE
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(18.dp),
+                        colors = CardDefaults.cardColors(containerColor = SurfaceDark)
                     ) {
-                        Box(
+                        Row(
                             modifier = Modifier
-                                .size(40.dp)
-                                .clip(CircleShape)
-                                .background(CanvasDark),
-                            contentAlignment = Alignment.Center
+                                .fillMaxWidth()
+                                .border(1.dp, BorderDark, RoundedCornerShape(18.dp))
+                                .padding(14.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(text = cat?.iconEmoji ?: "💳", fontSize = 20.sp)
-                        }
+                            Box(
+                                modifier = Modifier
+                                    .size(42.dp)
+                                    .clip(CircleShape)
+                                    .background(SurfaceCard),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(text = cat?.iconEmoji ?: "💳", fontSize = 18.sp)
+                            }
 
-                        Spacer(modifier = Modifier.width(12.dp))
+                            Spacer(modifier = Modifier.width(12.dp))
 
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = txn.merchant,
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = TextPrimary
-                            )
-                            Row(verticalAlignment = Alignment.CenterVertically) {
+                            Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = dateFormat.format(Date(txn.timestamp)),
-                                    fontSize = 11.sp,
-                                    color = TextMuted
+                                    text = txn.merchant,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = TextPrimary
                                 )
-                                if (txn.isAutoCategorized) {
-                                    Spacer(modifier = Modifier.width(6.dp))
+                                Row(verticalAlignment = Alignment.CenterVertically) {
                                     Text(
-                                        text = "⚡ SMS",
-                                        fontSize = 10.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = AccentEmerald
+                                        text = "${cat?.name ?: "Other"} • ${txn.accountName}",
+                                        fontSize = 11.sp,
+                                        color = TextMuted
+                                    )
+                                    if (txn.isAutoCategorized) {
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text("⚡ SMS", fontSize = 9.sp, fontWeight = FontWeight.Bold, color = AccentEmerald)
+                                    }
+                                }
+                            }
+
+                            Column(horizontalAlignment = Alignment.End) {
+                                Text(
+                                    text = (if (isExpense) "- " else "+ ") + currencyFormat.format(txn.amount),
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isExpense) TextPrimary else AccentEmerald
+                                )
+
+                                // Instant Delete / Not a transaction action
+                                IconButton(
+                                    onClick = { onDeleteTransaction(txn) },
+                                    modifier = Modifier.size(24.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Default.Delete,
+                                        contentDescription = "Delete",
+                                        tint = TextMuted.copy(alpha = 0.6f),
+                                        modifier = Modifier.size(15.dp)
                                     )
                                 }
                             }
                         }
-
-                        Text(
-                            text = (if (txn.type == TransactionType.EXPENSE) "- " else "+ ") + currencyFormat.format(txn.amount),
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = if (txn.type == TransactionType.EXPENSE) TextPrimary else AccentEmerald
-                        )
                     }
                 }
             }
 
             item {
-                Spacer(modifier = Modifier.height(72.dp)) // Padding for FAB
+                Spacer(modifier = Modifier.height(72.dp))
             }
         }
     }

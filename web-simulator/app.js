@@ -41,23 +41,40 @@ let transactions = [
 function parseSms(sender, body) {
   const lower = body.toLowerCase();
 
-  // 1. Ignore OTPs and non-completed authorization
-  const ignoreWords = ["otp", "one time password", "verification code", "secret code", "do not share", "request to pay", "declined", "failed"];
-  for (const w of ignoreWords) {
+  // 1. Ignore promotional offers, discount coupons, fake credits, loans, and OTPs
+  const spamKeywords = [
+    "off", "up to", "coupon", "voucher", "discount", "use code", "code:", "apply code",
+    "code eazydiner", "promo code", "promotional", "cashback offer", "reward points",
+    "loyalty points", "bonus points", "bonus cash", "game cash", "claim now", "claim your",
+    "hurry", "valid till", "expires on", "tap here", "click here", "bit.ly", "t.co",
+    "w.ezyd.in", "free delivery", "order now", "flat rs", "save rs", "save up to",
+    "win up to", "earn up to", "gift card", "spin and win", "pre-approved", "apply for loan",
+    "otp", "one time password", "verification code", "secret code", "do not share",
+    "request to pay", "declined", "failed", "unsuccessful", "mandate created"
+  ];
+  for (const w of spamKeywords) {
     if (lower.includes(w)) {
-      return { success: false, reason: "Ignored: OTP / Non-transaction alert" };
+      return { success: false, reason: "Ignored: Promotional / Offer / OTP alert" };
     }
   }
 
   // 2. Debit vs Credit
   const debitWords = ["debited", "spent", "paid to", "transferred to", "withdrawn", "purchase of", "charged", "sent to", "txn of", "payment of", "debited by"];
-  const creditWords = ["credited", "received", "deposited", "salary credited", "refund of", "cashback of", "added to"];
+  const creditWords = ["credited", "deposited", "salary credited", "refund of", "cashback of", "added to your bank", "received in your a/c"];
 
   const isDebit = debitWords.some(w => lower.includes(w));
-  const isCredit = creditWords.some(w => lower.includes(w));
+  const isCreditCandidate = creditWords.some(w => lower.includes(w));
 
-  if (!isDebit && !isCredit) {
+  if (!isDebit && !isCreditCandidate) {
     return { success: false, reason: "No debit or credit transaction indicators found" };
+  }
+
+  if (isCreditCandidate && !isDebit) {
+    const bankIndicators = ["a/c", "acct", "account", "ending", "card", "upi ref", "imps", "neft", "rtgs", "avl bal", "available bal", "clear bal", "balance", "bank", "salary", "payroll"];
+    const hasBank = bankIndicators.some(w => lower.includes(w));
+    if (!hasBank) {
+      return { success: false, reason: "Ignored: Credit message lacks verified bank account context" };
+    }
   }
 
   const type = isDebit ? "EXPENSE" : "INCOME";
